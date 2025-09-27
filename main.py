@@ -1,13 +1,22 @@
-from src.tracker import AIAmendmentTracker
+from pathlib import Path
+from src.neo4j_utils import Neo4jHandler
+from src.process_act import process_act
 
-if __name__ == "__main__":
-    base_pdf = "data/14-2010_E.pdf"
-    amendments = ["data/24-2023_E.pdf"]
+# Neo4j Aura credentials
+URI = "neo4j+s://d598a1e7.databases.neo4j.io"
+USERNAME = "neo4j"
+PASSWORD = "LgL2XKWqhZERu6KdDpmN1s6dDp1tuCPQZTwlWOfueJw"
 
-    tracker = AIAmendmentTracker(base_pdf, amendments)
-    all_summaries = tracker.run()
+# Initialize Neo4j handler
+neo4j_handler = Neo4jHandler(URI, USERNAME, PASSWORD)
 
-    print("\n=== Extracted Changes ===")
-    for summary in all_summaries:
-        for change in summary["changes"]:
-            print(f"Section {change['section']} ({change.get('subsection')}) → {change['change_type']}")
+# Root Acts folder
+ACTS_DIR = Path("Acts")
+
+# Process all Acts
+for act_folder in ACTS_DIR.iterdir():
+    if act_folder.is_dir():
+        process_act(act_folder, neo4j_handler)
+
+# Close Neo4j connection
+neo4j_handler.close()
